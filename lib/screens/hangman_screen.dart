@@ -1,5 +1,5 @@
 import 'dart:math';
-
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:todo/widget.dart';
 
@@ -18,8 +18,82 @@ class _HangmanScreenState extends State<HangmanScreen> {
   List<String> correctGuess = List.empty(growable: true);
   late List<bool> maskWord =
       List<bool>.filled(guessThisWord.length, true, growable: false);
+  bool gameFinished = false;
+
+  _showWinAlert(context) {
+    Alert(
+      context: context,
+      type: AlertType.success,
+      title: "You Win",
+      buttons: [
+        DialogButton(
+          child: Text(
+            "Home",
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+            Navigator.pop(context);
+          },
+          gradient: LinearGradient(colors: [
+            Color(0xff431480),
+            Color.fromARGB(255, 154, 22, 119),
+          ]),
+        ),
+        DialogButton(
+          child: Text(
+            "Next",
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          onPressed: () => Navigator.pop(context),
+          gradient: LinearGradient(colors: [
+            Color(0xff431480),
+            Color.fromARGB(255, 154, 22, 119),
+          ]),
+        )
+      ],
+    ).show();
+  }
+
+  _showLoseAlert(context) {
+    Alert(
+      context: context,
+      type: AlertType.warning,
+      title: "Loser",
+      buttons: [
+        DialogButton(
+          child: Text(
+            "Home",
+            style: TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+            Navigator.pop(context);
+          },
+          gradient: LinearGradient(colors: [
+            Color(0xff431480),
+            Color.fromARGB(255, 154, 22, 119),
+          ]),
+        ),
+      ],
+    ).show();
+  }
+
+  _whenWrongPressed(context, word) {
+    setState(() {
+      pressedWords.add(word);
+      life -= 1;
+
+      if (life <= 0) {
+        _showLoseAlert(context);
+        gameFinished = true;
+      }
+    });
+  }
 
   void alphabetPressed(String word) {
+    if (pressedWords.contains(word) || gameFinished) return;
+
     bool haveInGuess = guessThisWord.contains(word);
     if (haveInGuess) {
       int duplicateWordNumber =
@@ -33,18 +107,16 @@ class _HangmanScreenState extends State<HangmanScreen> {
         correctGuess.add(word);
         setState(() {
           maskWord[unmaskIndex] = false;
+          if (maskWord.every((element) => !element)) {
+            gameFinished = true;
+            _showWinAlert(context);
+          }
         });
       } else {
-        setState(() {
-          pressedWords.add(word);
-          life -= 1;
-        });
+        _whenWrongPressed(context, word);
       }
     } else {
-      setState(() {
-        pressedWords.add(word);
-        life -= 1;
-      });
+      _whenWrongPressed(context, word);
     }
   }
 
